@@ -81,8 +81,27 @@ module CarrierWave
               next unless self.send(condition, new_file)
             end
           end
+
+          start = Time.now
           self.send(method, *args)
+          finish = Time.now
+
+          image = opened_image(new_file.path)
+          @logger ||= Logger.new('log/file_processing.log')
+
+          @logger.info([
+            finish - start,
+            [image[:width], image[:height]].join('x'),
+            [length, 'bytes'].join(' '),
+            method,
+            [args].flatten.join(' '),
+            filename || original_filename
+          ].join(' : '))
         end
+      end
+
+      def opened_image(file_path)
+        ::MiniMagick::Image.open(file_path)
       end
 
     end # Processing
